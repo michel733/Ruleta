@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ruleta</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="contenedor">
+
+    <!-- Panel izquierdo: controles -->
+    <div class="panel-izquierdo">
+      <h1>🎡 Ruleta</h1>
+
+      <div class="agregar-persona">
+        <input type="text" id="inputNombre" placeholder="Nombre de la persona..." maxlength="30" />
+        <button id="btnAgregar">Agregar</button>
+      </div>
+
+      <ul id="listaPersonas"></ul>
+
+      <button id="btnGirar" disabled>Girar ruleta</button>
+
+      <div id="resultado" class="resultado oculto">
+        <span id="ganador"></span>
+      </div>
+    </div>
+
+    <!-- Panel derecho: canvas de la ruleta -->
+    <div class="panel-derecho">
+      <div class="ruleta-wrapper">
+        <div class="flecha">▼</div>
+        <canvas id="ruletaCanvas" width="500" height="500"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="ruleta.js"></script>
+</body>
+</html>
