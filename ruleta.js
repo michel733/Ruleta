@@ -14,9 +14,9 @@ const FAVORITOS  = ['osvaldo', 'miky', 'alisson'];
 // Nombres con menor probabilidad
 const PENALIZADOS = ['yajaira', 'temo', 'michel', 'michael'];
 
-const PESO_FAVORITO  = 4;  // 4x más probabilidad
-const PESO_NORMAL    = 1;
-const PESO_PENALIZADO = 0.2; // casi nunca salen
+const PESO_FAVORITO   = 2;   // el doble de probabilidad, no tan obvio
+const PESO_NORMAL     = 1;
+const PESO_PENALIZADO = 0.5; // la mitad, tampoco tan raro que salgan
 
 const canvas        = document.getElementById('ruletaCanvas');
 const ctx           = canvas.getContext('2d');
