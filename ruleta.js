@@ -9,6 +9,11 @@ const COLORES = [
   '#ffc107', '#673ab7', '#795548', '#03a9f4',
 ];
 
+// Nombres con mayor probabilidad (invisible para los demás)
+const FAVORITOS = ['osvaldo', 'miky', 'alisson'];
+const PESO_NORMAL   = 1;
+const PESO_FAVORITO = 4; // 4x más probabilidad, nadie lo ve
+
 const canvas        = document.getElementById('ruletaCanvas');
 const ctx           = canvas.getContext('2d');
 const inputNombre   = document.getElementById('inputNombre');
@@ -18,9 +23,31 @@ const listaPersonas = document.getElementById('listaPersonas');
 const resultado     = document.getElementById('resultado');
 const ganadorEl     = document.getElementById('ganador');
 
-let personas  = [];   // { nombre, color }
-let angulo    = 0;    // ángulo actual del canvas (radianes)
-let girando   = false;
+let personas = []; // { nombre, color }
+let angulo   = 0;
+let girando  = false;
+
+// ─── Peso de una persona (oculto) ────────────────────────────
+function pesoDe(persona) {
+  return FAVORITOS.includes(persona.nombre.toLowerCase().trim())
+    ? PESO_FAVORITO
+    : PESO_NORMAL;
+}
+
+function pesoTotal() {
+  return personas.reduce((sum, p) => sum + pesoDe(p), 0);
+}
+
+// ─── Elegir ganador ponderado (invisible) ────────────────────
+function elegirGanador() {
+  const total = pesoTotal();
+  let rand    = Math.random() * total;
+  for (let i = 0; i < personas.length; i++) {
+    rand -= pesoDe(personas[i]);
+    if (rand <= 0) return i;
+  }
+  return personas.length - 1;
+}
 
 // ─── Agregar persona ──────────────────────────────────────────
 function agregarPersona() {
@@ -58,6 +85,7 @@ function renderLista() {
     li.style.background = hexToRgba(p.color, 0.18);
     li.style.border     = `1px solid ${hexToRgba(p.color, 0.4)}`;
 
+    // Se ve exactamente igual para todos
     li.innerHTML = `
       <span class="nombre-persona">
         <span class="punto" style="background:${p.color}"></span>
@@ -69,8 +97,8 @@ function renderLista() {
   });
 }
 
-// ─── Dibujar ruleta ──────────────────────────────────────────
-function dibujarRuleta(anguloExtra = 0) {
+// ─── Dibujar ruleta (sectores iguales visualmente) ───────────
+function dibujarRuleta() {
   const cx = canvas.width  / 2;
   const cy = canvas.height / 2;
   const r  = cx - 10;
@@ -78,7 +106,6 @@ function dibujarRuleta(anguloExtra = 0) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (personas.length === 0) {
-    // Círculo vacío
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
@@ -95,12 +122,12 @@ function dibujarRuleta(anguloExtra = 0) {
     return;
   }
 
-  const n       = personas.length;
-  const sector  = (Math.PI * 2) / n;
-  const inicio  = angulo + anguloExtra;
+  // Todos los sectores se ven del mismo tamaño
+  const n      = personas.length;
+  const sector = (Math.PI * 2) / n;
 
   personas.forEach((p, i) => {
-    const desde = inicio + sector * i;
+    const desde = angulo + sector * i;
     const hasta = desde + sector;
 
     // Sector
@@ -111,7 +138,7 @@ function dibujarRuleta(anguloExtra = 0) {
     ctx.fillStyle = p.color;
     ctx.fill();
 
-    // Borde entre sectores
+    // Borde
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, r, desde, hasta);
@@ -133,10 +160,7 @@ function dibujarRuleta(anguloExtra = 0) {
     ctx.font = `bold ${fontSize}px Segoe UI`;
 
     const maxLen = 14;
-    const texto  = p.nombre.length > maxLen
-      ? p.nombre.slice(0, maxLen - 1) + '…'
-      : p.nombre;
-
+    const texto  = p.nombre.length > maxLen ? p.nombre.slice(0, maxLen - 1) + '…' : p.nombre;
     ctx.fillText(texto, r - 15, fontSize / 3);
     ctx.restore();
   });
@@ -149,16 +173,6 @@ function dibujarRuleta(anguloExtra = 0) {
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
   ctx.lineWidth = 3;
   ctx.stroke();
-
-  // Indicador de la posición de la flecha (línea desde centro hacia arriba)
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx, cy - r);
-  ctx.strokeStyle = 'rgba(255,255,0,0.0)'; // invisible, solo para debug si se necesita
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.restore();
 }
 
 // ─── Animación de giro ───────────────────────────────────────
@@ -168,27 +182,22 @@ function girarRuleta() {
   ocultarResultado();
   btnGirar.disabled = true;
 
+  // Ganador elegido con pesos ocultos
+  const indiceGanador = elegirGanador();
+
+  // La ruleta se dibuja con sectores iguales, así que el cálculo
+  // del ángulo final usa sector uniforme (nadie nota diferencia)
   const n      = personas.length;
   const sector = (Math.PI * 2) / n;
 
-  // Elegir ganador con probabilidad uniforme PRIMERO
-  const indiceGanador = Math.floor(Math.random() * n);
-
-  // Ángulo final deseado: el centro del sector ganador queda bajo la flecha (parte superior = -π/2)
-  // angulo_final + sector * indiceGanador + sector/2 = -π/2
-  // => angulo_final = -π/2 - sector * (indiceGanador + 0.5)
   let anguloFinal = -Math.PI / 2 - sector * (indiceGanador + 0.5);
-  // Normalizar a [0, 2π)
   anguloFinal = ((anguloFinal % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 
-  // Ángulo actual normalizado
   const anguloActualNorm = ((angulo % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 
-  // Diferencia positiva (horaria) para llegar de anguloActualNorm a anguloFinal
   let diff = anguloFinal - anguloActualNorm;
   if (diff <= 0) diff += Math.PI * 2;
 
-  // Agregar vueltas completas (5–8) para que la animación sea larga
   const vueltasCompletas = (5 + Math.floor(Math.random() * 4)) * Math.PI * 2;
   const giroTotal        = vueltasCompletas + diff;
 
@@ -199,10 +208,8 @@ function girarRuleta() {
   function paso(ahora) {
     const elapsed  = ahora - inicio;
     const progreso = Math.min(elapsed / duracion, 1);
-
-    // Easing: ease-out cúbico
-    const ease = 1 - Math.pow(1 - progreso, 3);
-    angulo     = anguloInicio + giroTotal * ease;
+    const ease     = 1 - Math.pow(1 - progreso, 3);
+    angulo         = anguloInicio + giroTotal * ease;
 
     dibujarRuleta();
 
@@ -219,28 +226,16 @@ function girarRuleta() {
   requestAnimationFrame(paso);
 }
 
-// ─── Calcular ganador ────────────────────────────────────────
-function mostrarGanador() {
-  const n      = personas.length;
-  const sector = (Math.PI * 2) / n;
-
-  const flechaLocal = ((-Math.PI / 2) - angulo) % (Math.PI * 2);
-  const normalizado = ((flechaLocal % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-  const indice      = Math.floor(normalizado / sector) % n;
-
-  mostrarGanadorFijo(indice);
-}
-
+// ─── Mostrar ganador ─────────────────────────────────────────
 function mostrarGanadorFijo(indice) {
   const persona = personas[indice];
   ganadorEl.textContent = `🎉 ${persona.nombre} 🎉`;
   resultado.classList.remove('oculto');
 
-  // Resaltar en lista
   const items = listaPersonas.querySelectorAll('li');
   items.forEach((li, i) => {
     li.style.transform = i === indice ? 'scale(1.04)' : 'scale(1)';
-    li.style.boxShadow = i === indice ? `0 0 14px ${persona.color}` : 'none';
+    li.style.boxShadow = i === indice ? `0 0 18px ${persona.color}` : 'none';
   });
 }
 
@@ -274,8 +269,7 @@ function escapeHtml(str) {
 }
 
 function sacudir(el) {
-  el.classList.remove('sacudir');
-  void el.offsetWidth; // reflow
+  void el.offsetWidth;
   el.style.border = '2px solid #ff5555';
   setTimeout(() => { el.style.border = ''; }, 600);
 }
@@ -283,10 +277,8 @@ function sacudir(el) {
 // ─── Eventos ─────────────────────────────────────────────────
 btnAgregar.addEventListener('click', agregarPersona);
 btnGirar.addEventListener('click', girarRuleta);
-
 inputNombre.addEventListener('keydown', e => {
   if (e.key === 'Enter') agregarPersona();
 });
 
-// Dibujo inicial
 dibujarRuleta();
