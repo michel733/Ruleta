@@ -10,9 +10,13 @@ const COLORES = [
 ];
 
 // Nombres con mayor probabilidad (invisible para los demás)
-const FAVORITOS = ['osvaldo', 'miky', 'alisson'];
-const PESO_NORMAL   = 1;
-const PESO_FAVORITO = 4; // 4x más probabilidad, nadie lo ve
+const FAVORITOS  = ['osvaldo', 'miky', 'alisson'];
+// Nombres con menor probabilidad
+const PENALIZADOS = ['yajaira', 'temo', 'michel', 'michael'];
+
+const PESO_FAVORITO  = 4;  // 4x más probabilidad
+const PESO_NORMAL    = 1;
+const PESO_PENALIZADO = 0.2; // casi nunca salen
 
 const canvas        = document.getElementById('ruletaCanvas');
 const ctx           = canvas.getContext('2d');
@@ -29,9 +33,10 @@ let girando  = false;
 
 // ─── Peso de una persona (oculto) ────────────────────────────
 function pesoDe(persona) {
-  return FAVORITOS.includes(persona.nombre.toLowerCase().trim())
-    ? PESO_FAVORITO
-    : PESO_NORMAL;
+  const nombre = persona.nombre.toLowerCase().trim();
+  if (FAVORITOS.includes(nombre))   return PESO_FAVORITO;
+  if (PENALIZADOS.includes(nombre)) return PESO_PENALIZADO;
+  return PESO_NORMAL;
 }
 
 function pesoTotal() {
