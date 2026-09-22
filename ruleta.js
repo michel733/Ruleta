@@ -54,7 +54,21 @@ function elegirGanador() {
   return personas.length - 1;
 }
 
-// ─── Agregar persona ──────────────────────────────────────────
+// ─── Guardar y cargar personas en localStorage ───────────────
+function guardarPersonas() {
+  localStorage.setItem('ruleta_personas', JSON.stringify(personas.map(p => p.nombre)));
+}
+
+function cargarPersonas() {
+  const guardados = localStorage.getItem('ruleta_personas');
+  if (!guardados) return;
+  JSON.parse(guardados).forEach(nombre => {
+    const color = COLORES[personas.length % COLORES.length];
+    personas.push({ nombre, color });
+  });
+}
+
+
 function agregarPersona() {
   const nombre = inputNombre.value.trim();
   if (!nombre) return;
@@ -68,6 +82,7 @@ function agregarPersona() {
   inputNombre.value = '';
   inputNombre.focus();
 
+  guardarPersonas();
   renderLista();
   dibujarRuleta();
   actualizarBotonGirar();
@@ -76,6 +91,7 @@ function agregarPersona() {
 // ─── Eliminar persona ─────────────────────────────────────────
 function eliminarPersona(index) {
   personas.splice(index, 1);
+  guardarPersonas();
   renderLista();
   dibujarRuleta();
   actualizarBotonGirar();
@@ -286,4 +302,8 @@ inputNombre.addEventListener('keydown', e => {
   if (e.key === 'Enter') agregarPersona();
 });
 
+// Cargar personas guardadas y dibujar
+cargarPersonas();
+renderLista();
 dibujarRuleta();
+actualizarBotonGirar();
