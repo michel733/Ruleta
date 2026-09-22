@@ -10,7 +10,7 @@ const COLORES = [
 ];
 
 // Nombres con mayor probabilidad (invisible para los demás)
-const FAVORITOS  = ['osvaldo', 'miky', 'alisson'];
+const FAVORITOS  = ['osvaldo', 'miky'];
 // Nombres con menor probabilidad
 const PENALIZADOS = ['yajaira', 'temo', 'michel', 'michael'];
 
