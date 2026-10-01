@@ -12,7 +12,7 @@ const COLORES = [
 // Nombres con mayor probabilidad (invisible para los demás)
 const FAVORITOS  = ['osvaldo', 'miky'];
 // Nombres con menor probabilidad
-const PENALIZADOS = ['yajaira', 'temo', 'michel', 'michael'];
+const PENALIZADOS = ['yajaira', 'temo', 'michel', 'michael', 'alisson'];
 
 const PESO_FAVORITO   = 2;   // el doble de probabilidad, no tan obvio
 const PESO_NORMAL     = 1;
